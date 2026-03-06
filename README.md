@@ -1,6 +1,6 @@
-# E2E URL Loading and Scrolling Test
+# Web A11y Mocha Test Suite
 
-This project uses Mocha and Selenium WebDriver to perform a simple E2E test. It reads a list of URLs from a CSV file, navigates to each URL in a browser, and scrolls to the bottom of the page.
+This project uses Mocha and Selenium WebDriver to perform a simple E2E test. It reads a list of URLs from a CSV file, navigates to each URL in a browser, and scrolls to the bottom of the page to perform web a11y automated scans
 
 ## Project Structure
 
@@ -28,6 +28,11 @@ This project uses Mocha and Selenium WebDriver to perform a simple E2E test. It 
     cd node_modules/browserstack-node-sdk/ && npm i && npm run build-proto
     cd ../..
     ```
+    or run setup script
+
+    ```bash
+    ENV=ai-a11y-sdk-rengg/regression/preprod/prod ./setup.sh
+    ```
 
 2.  **Install dependencies:**
 
@@ -50,4 +55,4 @@ To run the tests, execute the following command:
 npm test
 ```
 
-This will launch a browser, navigate to each URL in `data/urls.csv`, and scroll to the bottom of the page.
+This will launch a automate sdk session, navigate to each URL in `data/urls.csv`, and scroll to the bottom of the page.
