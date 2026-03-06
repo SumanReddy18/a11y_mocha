@@ -1,0 +1,19 @@
+{
+    "name": "a11y-mocha-framework",
+    "version": "1.0.0",
+    "description": "Accessibility testing framework using Mocha and Selenium",
+    "main": "index.js",
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "scripts": {
+        "test": "browserstack-node-sdk mocha src/test.js"
+    },
+    "dependencies": {
+        "browserstack-node-sdk": "github:browserstack/browserstack-node-agent#ai-a11y-sdk-rengg",
+        "selenium-webdriver": "^4.16.0"
+    },
+    "devDependencies": {
+        "mocha": "^10.2.0"
+    }
+}

@@ -1,0 +1,28 @@
+userName: ${BROWSERSTACK_USERNAME}
+accessKey: ${BROWSERSTACK_ACCESS_KEY}
+platforms:
+  - os: OS X
+    browserName: Chrome
+    browserVersion: latest
+  # - os: Windows
+    #browserName: Chrome
+    # browserVersion: latest
+browserstackLocal: false
+buildIdentifier: ${BUILD_NUMBER}
+projectName: A11Y_MOCHA_PROJECT
+debug: true
+networkLogs: false
+consoleLogs: info
+parallelsPerPlatform: 1
+testObservability: true
+browserstackAutomation: true  
+accessibility: true
+accessibilityOptions:
+  scannerProcessingTimeout: 5
+  wcagVersion: wcag22aaa
+  includeIssueType: 
+    bestPractice: true
+    needsReview: true
+    experimental: true
+    advanced: true
+  scannerVersion: 'latest'
