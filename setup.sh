@@ -2,7 +2,7 @@
 set -e
 
 if [ "$ENV" = "rengg" ]; then
-    SDK_BRANCH="ai-a11y-sdk-rengg"
+    SDK_BRANCH="ai-a11y-one-day"
 elif [ "$ENV" = "regression" ]; then
     SDK_BRANCH="a11y-sdk-regression"
 elif [ "$ENV" = "preprod" ]; then
@@ -10,7 +10,7 @@ elif [ "$ENV" = "preprod" ]; then
 elif [ "$ENV" = "prod" ]; then
     SDK_BRANCH="main"
 else
-    SDK_BRANCH="ai-a11y-sdk-rengg"
+    SDK_BRANCH="ai-a11y-one-day"
 fi
 
 echo "Using SDK branch: $SDK_BRANCH based on ENV: $ENV"

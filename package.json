@@ -10,7 +10,7 @@
         "test": "browserstack-node-sdk mocha src/test.js"
     },
     "dependencies": {
-        "browserstack-node-sdk": "github:browserstack/browserstack-node-agent#ai-a11y-sdk-rengg",
+        "browserstack-node-sdk": "github:browserstack/browserstack-node-agent#ai-a11y-one-day",
         "selenium-webdriver": "^4.16.0"
     },
     "devDependencies": {
