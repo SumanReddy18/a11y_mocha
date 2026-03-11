@@ -31,7 +31,7 @@ This project uses Mocha and Selenium WebDriver to perform a simple E2E test. It 
     or run setup script
 
     ```bash
-    ENV=ai-a11y-sdk-rengg/regression/preprod/prod ./setup.sh
+    ENV=rengg/regression/preprod/prod ./setup.sh
     ```
 
 2.  **Install dependencies:**
