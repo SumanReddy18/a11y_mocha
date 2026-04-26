@@ -8,12 +8,12 @@ describe("A11y Mocha Test Suite", function () {
 
   before(async function () {
     try {
-      console.log("Initializing WebDriver...");
+      console.log("[INFO LOG] Initializing WebDriver...");
       driver = await new Builder().forBrowser("chrome").build();
       await driver.manage().window().maximize();
-      console.log("WebDriver initialized successfully");
+      console.log("[INFO LOG] WebDriver initialized successfully");
     } catch (error) {
-      console.error(`Failed to initialize WebDriver: ${error.message}`);
+      console.error(`[ERROR LOG] Failed to initialize WebDriver: ${error.message}`);
       throw error;
     }
   });
@@ -25,15 +25,15 @@ describe("A11y Mocha Test Suite", function () {
       .split("\n")
       .filter(Boolean);
 
-    console.log(`Starting test with URLs: ${JSON.stringify(urls)}`);
+    console.log(`[INFO LOG] Starting test with URLs: ${JSON.stringify(urls)}`);
 
     for (const url of urls) {
       try {
-        console.log(`Navigating to ${url}...`);
+        console.log(`[INFO LOG] Navigating to ${url}...`);
         await driver.get(url);
-        console.log(`Navigation to ${url} completed`);
+        console.log(`[INFO LOG] Navigation to ${url} completed`);
 
-        console.log(`Scrolling to the bottom of ${url}...`);
+        console.log(`[INFO LOG] Scrolling to the bottom of ${url}...`);
         await driver.executeScript(`
             return new Promise((resolve) => {
                 let totalHeight = 0;
@@ -51,19 +51,19 @@ describe("A11y Mocha Test Suite", function () {
             });
         `);
         await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log(`Successfully scrolled to the bottom of ${url}`);
+        console.log(`[INFO LOG] Successfully scrolled to the bottom of ${url}`);
       } catch (error) {
-        console.error(`Error processing ${url}: ${error.message}`);
+        console.error(`[ERROR LOG] Error processing ${url}: ${error.message}`);
       }
     }
 
-    console.log("Test completed");
+    console.log("[INFO LOG] Test completed");
   });
 
   after(async function () {
     if (driver) {
       await driver.quit();
-      console.log("Browser successfully closed");
+      console.log("[INFO LOG] Browser successfully closed");
     }
   });
 });
