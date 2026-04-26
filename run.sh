@@ -188,8 +188,8 @@ mkdir -p log
 echo "→ Running $IMAGE  (env=$ENV_NAME, BS user=$BROWSERSTACK_USERNAME)"
 exec colima nerdctl -- run --rm -it \
   -e "BUILD_NUMBER=${BUILD_NUMBER:-local-$(date +%s)}" \
-  -e BROWSERSTACK_USERNAME \
-  -e BROWSERSTACK_ACCESS_KEY \
+  -e "BROWSERSTACK_USERNAME=${BROWSERSTACK_USERNAME}" \
+  -e "BROWSERSTACK_ACCESS_KEY=${BROWSERSTACK_ACCESS_KEY}" \
   -v "$PWD/src:/app/src" \
   -v "$PWD/data:/app/data" \
   -v "$PWD/log:/app/log" \
