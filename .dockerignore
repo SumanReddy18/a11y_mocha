@@ -1,0 +1,14 @@
+node_modules
+log
+logs
+.git
+.gitignore
+package-lock.json
+Dockerfile
+.dockerignore
+setup-colima.sh
+run.sh
+README.md
+# Belt-and-suspenders: never let a stray secrets file enter the build context.
+keys.env
+*.local.env

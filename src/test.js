@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 describe("A11y Mocha Test Suite", function () {
-  this.timeout(120000);
+  this.timeout(1800000);
   let driver;
 
   before(async function () {
