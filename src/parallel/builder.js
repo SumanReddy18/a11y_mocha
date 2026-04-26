@@ -11,7 +11,7 @@ const generatedDir = path.join(__dirname, "generated");
 // 1. Read URLs from urls.csv
 // ---------------------------------------------------------------------------
 if (!fs.existsSync(csvPath)) {
-  console.error(`CSV file not found: ${csvPath}`);
+  console.error(`[ERROR LOG] CSV file not found: ${csvPath}`);
   process.exit(1);
 }
 
@@ -23,7 +23,7 @@ const urls = fs
 
 if (urls.length === 0) {
   console.error(
-    "No URLs found in data/urls.csv. Please populate the file and retry.",
+    "[ERROR LOG] No URLs found in data/urls.csv. Please populate the file and retry.",
   );
   process.exit(1);
 }
@@ -38,7 +38,7 @@ for (let i = 0; i < urls.length; i += urlsPerFile) {
 }
 
 console.log(
-  `Total URLs: ${urls.length} | URLs per file: ${urlsPerFile} | Test files to generate: ${batches.length}`,
+  `[INFO LOG] Total URLs: ${urls.length} | URLs per file: ${urlsPerFile} | Test files to generate: ${batches.length}`,
 );
 
 // ---------------------------------------------------------------------------
@@ -58,10 +58,10 @@ batches.forEach((batch, index) => {
   const filePath = path.join(generatedDir, fileName);
 
   fs.writeFileSync(filePath, generateTestContent(batch, batchIndex), "utf-8");
-  console.log(`  Generated ${fileName}  (${batch.length} URLs)`);
+  console.log(`[INFO LOG] Generated ${fileName}  (${batch.length} URLs)`);
 });
 
-console.log(`\nDone. Test files written to src/parallel/generated/`);
+console.log(`[INFO LOG] Done. Test files written to src/parallel/generated/`);
 
 // ---------------------------------------------------------------------------
 // Helper: build the JS source for a single generated test file
@@ -82,23 +82,23 @@ function generateTestContent(batchUrls, batchIndex) {
     "",
     "  before(async function () {",
     "    try {",
-    `      console.log("Initializing WebDriver for Batch ${batchIndex}...");`,
+    `      console.log("[INFO LOG] Initializing WebDriver for Batch ${batchIndex}...");`,
     '      driver = await new Builder().forBrowser("chrome").build();',
     "      await driver.manage().window().maximize();",
-    `      console.log("WebDriver initialized for Batch ${batchIndex}");`,
+    `      console.log("[INFO LOG] WebDriver initialized for Batch ${batchIndex}");`,
     "    } catch (error) {",
-    '      console.error("Failed to initialize WebDriver: " + error.message);',
+    `      console.error("[ERROR LOG] Failed to initialize WebDriver for Batch ${batchIndex}: " + error.message);`,
     "      throw error;",
     "    }",
     "  });",
     "",
     `  it("Accessibility scan - Batch ${batchIndex}", async () => {`,
-    `    console.log("Starting Batch ${batchIndex} with " + urls.length + " URLs");`,
+    `    console.log("[INFO LOG] Starting Batch ${batchIndex} with " + urls.length + " URLs");`,
     "    for (const url of urls) {",
     "      try {",
-    '        console.log("Navigating to " + url);',
+    `        console.log("[INFO LOG] Navigating to " + url);`,
     "        await driver.get(url);",
-    '        console.log("Navigation completed: " + url);',
+    `        console.log("[INFO LOG] Navigation completed: " + url);`,
     "",
     "        await driver.executeScript(`",
     "            return new Promise((resolve) => {",
@@ -116,18 +116,18 @@ function generateTestContent(batchUrls, batchIndex) {
     "            });",
     "        `);",
     "        await new Promise((resolve) => setTimeout(resolve, 500));",
-    '        console.log("Finished scrolling: " + url);',
+    `        console.log("[INFO LOG] Finished scrolling: " + url);`,
     "      } catch (error) {",
-    '        console.error("Error processing " + url + ": " + error.message);',
+    `        console.error("[ERROR LOG] Error processing " + url + ": " + error.message);`,
     "      }",
     "    }",
-    `    console.log("Batch ${batchIndex} completed");`,
+    `    console.log("[INFO LOG] Batch ${batchIndex} completed");`,
     "  });",
     "",
     "  after(async function () {",
     "    if (driver) {",
     "      await driver.quit();",
-    `      console.log("Browser closed for Batch ${batchIndex}");`,
+    `      console.log("[INFO LOG] Browser closed for Batch ${batchIndex}");`,
     "    }",
     "  });",
     "});",

@@ -5,7 +5,7 @@ const path = require("path");
 const rootDir = path.resolve(__dirname, "../..");
 const generatedDir = path.join(__dirname, "generated");
 
-console.log("Generating test files...\n");
+console.log("[INFO LOG] Generating test files...\n");
 execSync(`node "${path.join(__dirname, "builder.js")}"`, {
   stdio: "inherit",
   cwd: rootDir,
@@ -18,12 +18,12 @@ const testFiles = fs
   .map((f) => path.join("src", "parallel", "generated", f));
 
 if (testFiles.length === 0) {
-  console.error("No test files were generated. Aborting.");
+  console.error("[ERROR LOG] No test files were generated. Aborting.");
   process.exit(1);
 }
 
 console.log(
-  `\nRunning ${testFiles.length} test file(s) as parallel sessions...\n`,
+  `[INFO LOG] Running ${testFiles.length} test file(s) as parallel sessions...\n`,
 );
 const bsSDK = path.join(
   rootDir,
@@ -50,6 +50,6 @@ const command = spawn(
 
 command.on("exit", (exitCode) => {
   fs.rmSync(generatedDir, { recursive: true, force: true });
-  console.log("\nCleaned up generated test files.");
+  console.log("[INFO LOG] Cleaned up generated test files.");
   process.exit(exitCode || 0);
 });
