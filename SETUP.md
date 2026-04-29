@@ -72,33 +72,98 @@ Rules `run.sh` enforces (it will refuse to run otherwise):
 If `keys.env` ever ends up in git history, **rotate every credential in it** —
 removing the file from the working tree doesn't remove it from history.
 
-## 3. Run
+## 3. Build, rebuild, and run per env
 
 ```bash
 ./run.sh <env> [--rebuild] [-- <extra args>]
 ```
 
-| Env          | SDK branch baked in     |
-|--------------|-------------------------|
-| `rengg`      | `ai-a11y-one-day` (default) |
-| `regression` | `a11y-sdk-regression`   |
-| `preprod`    | `a11y-sdk-preprod`      |
-| `prod`       | `main`                  |
+| Env          | Image tag              | SDK branch baked in        |
+|--------------|------------------------|----------------------------|
+| `rengg`      | `a11y-mocha:rengg`     | `ai-a11y-one-day` (default)|
+| `regression` | `a11y-mocha:regression`| `a11y-sdk-regression`      |
+| `preprod`    | `a11y-mocha:preprod`   | `a11y-sdk-preprod`         |
+| `prod`       | `a11y-mocha:prod`      | `main`                     |
 
-First call for each env builds an image (`a11y-mocha:<env>`) and caches it.
-Subsequent calls reuse the image — instant startup.
+`run.sh` decides whether to build automatically:
 
-### Examples
+- Image **doesn't exist** → builds, then runs.
+- Image **exists** → reuses it (prints `✓ Reusing existing image …`), then runs.
+- `--rebuild` passed → always builds, then runs.
+
+You don't run a separate "build" command — the script handles it.
+
+### First-time build per env
+
+The first invocation against any env builds `a11y-mocha:<env>` from the
+`Dockerfile` (fetches the matching SDK branch, installs deps, compiles
+protos). This takes a few minutes. Every subsequent run for that env reuses
+the cached image — startup is instant.
 
 ```bash
-./run.sh rengg                          # default env
-./run.sh preprod                        # different image, independent
-./run.sh prod --rebuild                 # refresh after main moved
+./run.sh rengg          # builds a11y-mocha:rengg, then runs
+./run.sh preprod        # builds a11y-mocha:preprod, then runs
+./run.sh regression     # builds a11y-mocha:regression, then runs
+./run.sh prod           # builds a11y-mocha:prod, then runs
+```
+
+Each env produces a completely independent image — they don't share layers
+beyond the `node:20-slim` base, and multiple envs can build/run concurrently
+without conflict.
+
+### Re-running (no rebuild)
+
+```bash
+./run.sh rengg                          # reuses cached image, instant start
+./run.sh preprod                        # reuses cached image, instant start
 ./run.sh regression -- --grep "login"   # extra args forwarded to mocha
 ```
 
-Multiple envs can build/run concurrently — they don't share `node_modules`
-and don't touch the host.
+Edits to `src/`, `data/urls.csv`, or `browserstack.yml` are picked up via
+bind mounts (see [Section 4](#4-whats-mounted-at-run-time)) — no rebuild
+needed.
+
+### Forcing a rebuild
+
+Use `--rebuild` when the mapped SDK branch has moved, `package.json` or
+`Dockerfile` changed, or you rotated the GitHub PAT:
+
+```bash
+./run.sh rengg --rebuild         # refresh after ai-a11y-one-day moved
+./run.sh prod --rebuild          # refresh after main moved
+./run.sh preprod --rebuild       # force a clean build of preprod
+```
+
+`--rebuild` only refreshes the env you name — other env images are untouched.
+
+### Inspecting and cleaning up images
+
+```bash
+# List built images
+colima nerdctl -- images | grep a11y-mocha
+
+# Remove a single env's image (forces a fresh build next time)
+colima nerdctl -- rmi a11y-mocha:preprod
+
+# Remove all env images
+colima nerdctl -- rmi a11y-mocha:rengg a11y-mocha:regression a11y-mocha:preprod a11y-mocha:prod
+```
+
+### Running multiple envs in parallel
+
+Each env has its own image and its own `nerdctl run`, so you can fire them
+in separate terminals concurrently:
+
+```bash
+# terminal 1
+./run.sh rengg
+
+# terminal 2
+./run.sh preprod
+```
+
+They share Colima's VM resources but don't share `node_modules`, BS creds,
+or build state.
 
 ## 4. What's mounted at run time
 
