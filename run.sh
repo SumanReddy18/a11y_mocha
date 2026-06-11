@@ -187,7 +187,6 @@ exec docker run --rm -it \
   -e "BROWSERSTACK_USERNAME=${BROWSERSTACK_USERNAME}" \
   -e "BROWSERSTACK_ACCESS_KEY=${BROWSERSTACK_ACCESS_KEY}" \
   -e "BROWSERSTACK_TEST_ACCESSIBILITY_SCRIPT_TIMEOUT=60" \
-  -v "$PWD/node_modules/browserstack-node-sdk/src/helpers/accessibility-automation/accessibilityRetryHelper.js:/app/node_modules/browserstack-node-sdk/src/helpers/accessibility-automation/accessibilityRetryHelper.js:ro" \
   -v "$PWD/src:/app/src" \
   -v "$PWD/data:/app/data" \
   -v "$PWD/log:/app/log" \

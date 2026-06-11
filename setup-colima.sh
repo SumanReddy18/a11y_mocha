@@ -43,16 +43,28 @@ else
   ln -sfn "$BUILDX_BIN" "$BUILDX_LINK"
 fi
 
-if colima status >/dev/null 2>&1; then
-  echo "✓ Colima already running"
-  CURRENT_RUNTIME="$(colima status 2>&1 | awk -F': *' '/runtime/ {print $2; exit}')"
-  if [ -n "${CURRENT_RUNTIME:-}" ] && [ "$CURRENT_RUNTIME" != "docker" ]; then
-    echo "⚠  Colima is running with runtime '$CURRENT_RUNTIME', not 'docker'."
-    echo "    To switch:  colima stop && colima start --runtime docker --cpu 4 --memory 6 --disk 30"
-  fi
-else
+# `colima list` reports STATUS and RUNTIME for the default profile even when the
+# VM is stopped, so it's a more reliable probe than `colima status` (which only
+# succeeds while the VM is running).
+VM_ROW="$(colima list 2>/dev/null | awk '$1 == "default" {print; exit}')"
+VM_STATUS="$(echo "$VM_ROW" | awk '{print $2}')"
+VM_RUNTIME="$(echo "$VM_ROW" | awk '{print $7}')"
+
+if [ -z "$VM_ROW" ]; then
   echo "→ Starting Colima with Docker runtime (4 CPU / 6 GiB RAM / 30 GiB disk)"
   colima start --runtime docker --cpu 4 --memory 6 --disk 30
+elif [ "$VM_RUNTIME" != "docker" ]; then
+  # Runtime can't be changed in place, and the data disk is provisioned for the
+  # old runtime, so the only way to switch is to wipe and recreate the VM.
+  echo "→ Existing VM uses runtime '$VM_RUNTIME', not 'docker'. Recreating (this wipes its containers/images)."
+  colima delete --data --force
+  echo "→ Starting Colima with Docker runtime (4 CPU / 6 GiB RAM / 30 GiB disk)"
+  colima start --runtime docker --cpu 4 --memory 6 --disk 30
+elif [ "$VM_STATUS" = "Running" ]; then
+  echo "✓ Colima already running with the Docker runtime"
+else
+  echo "→ Starting existing Docker-runtime Colima VM"
+  colima start
 fi
 
 echo
