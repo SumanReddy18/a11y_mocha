@@ -55,11 +55,20 @@ if [ -z "$VM_ROW" ]; then
   colima start --runtime docker --cpu 4 --memory 6 --disk 30
 elif [ "$VM_RUNTIME" != "docker" ]; then
   # Runtime can't be changed in place, and the data disk is provisioned for the
-  # old runtime, so the only way to switch is to wipe and recreate the VM.
-  echo "→ Existing VM uses runtime '$VM_RUNTIME', not 'docker'. Recreating (this wipes its containers/images)."
-  colima delete --data --force
-  echo "→ Starting Colima with Docker runtime (4 CPU / 6 GiB RAM / 30 GiB disk)"
-  colima start --runtime docker --cpu 4 --memory 6 --disk 30
+  # old runtime, so switching requires wiping and recreating the VM. This Colima
+  # VM is shared with sibling repos, so recreating it would destroy THEIR
+  # containers/images too — we refuse to do that automatically. Manual step:
+  cat >&2 <<EOF
+✗ Existing Colima VM uses runtime '$VM_RUNTIME', not 'docker'.
+
+  Switching runtimes recreates the VM, which wipes ALL containers/images —
+  including any used by sibling repos sharing this Colima VM. Run manually
+  once you've confirmed that's safe:
+
+    colima delete --data --force
+    ./setup-colima.sh
+EOF
+  exit 1
 elif [ "$VM_STATUS" = "Running" ]; then
   echo "✓ Colima already running with the Docker runtime"
 else
