@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# One-time setup for Colima on macOS — no Docker install.
-# Uses the containerd runtime + bundled nerdctl (accessed via `colima nerdctl ...`).
+# One-time setup for Colima on macOS with the Docker runtime.
+# Uses the docker runtime so the standard `docker` CLI works — compatible with
+# docker-compose workflows in sibling repos (e.g. context_generator).
 # Safe to re-run; will skip steps that are already done.
 
 if ! command -v brew >/dev/null 2>&1; then
@@ -13,26 +14,51 @@ fi
 if brew list --formula colima >/dev/null 2>&1; then
   echo "✓ colima already installed"
 else
-  echo "→ Installing colima (Lima comes as a dependency; no docker required)"
+  echo "→ Installing colima"
   brew install colima
+fi
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo "→ Installing docker CLI"
+  brew install docker
+else
+  echo "✓ docker CLI already installed"
+fi
+
+if brew list --formula docker-buildx >/dev/null 2>&1; then
+  echo "✓ docker-buildx already installed"
+else
+  echo "→ Installing docker-buildx (required for BuildKit --secret support)"
+  brew install docker-buildx
+fi
+
+BUILDX_PLUGIN_DIR="${HOME}/.docker/cli-plugins"
+BUILDX_LINK="${BUILDX_PLUGIN_DIR}/docker-buildx"
+BUILDX_BIN="$(brew --prefix)/opt/docker-buildx/bin/docker-buildx"
+if [ -L "$BUILDX_LINK" ] && [ "$(readlink "$BUILDX_LINK")" = "$BUILDX_BIN" ]; then
+  echo "✓ buildx symlink already in place"
+else
+  echo "→ Symlinking buildx into docker CLI plugins"
+  mkdir -p "$BUILDX_PLUGIN_DIR"
+  ln -sfn "$BUILDX_BIN" "$BUILDX_LINK"
 fi
 
 if colima status >/dev/null 2>&1; then
   echo "✓ Colima already running"
   CURRENT_RUNTIME="$(colima status 2>&1 | awk -F': *' '/runtime/ {print $2; exit}')"
-  if [ -n "${CURRENT_RUNTIME:-}" ] && [ "$CURRENT_RUNTIME" != "containerd" ]; then
-    echo "⚠  Colima is running with runtime '$CURRENT_RUNTIME', not 'containerd'."
-    echo "    To switch:  colima stop && colima start --runtime containerd --cpu 4 --memory 6 --disk 30"
+  if [ -n "${CURRENT_RUNTIME:-}" ] && [ "$CURRENT_RUNTIME" != "docker" ]; then
+    echo "⚠  Colima is running with runtime '$CURRENT_RUNTIME', not 'docker'."
+    echo "    To switch:  colima stop && colima start --runtime docker --cpu 4 --memory 6 --disk 30"
   fi
 else
-  echo "→ Starting Colima with containerd runtime (4 CPU / 6 GiB RAM / 30 GiB disk)"
-  colima start --runtime containerd --cpu 4 --memory 6 --disk 30
+  echo "→ Starting Colima with Docker runtime (4 CPU / 6 GiB RAM / 30 GiB disk)"
+  colima start --runtime docker --cpu 4 --memory 6 --disk 30
 fi
 
 echo
 echo "Sanity check:"
-colima nerdctl -- info --format '✓ nerdctl is talking to: {{.ServerVersion}} on {{.OperatingSystem}}' \
-  || { echo "nerdctl check failed" >&2; exit 1; }
+docker info --format '✓ docker is talking to: {{.ServerVersion}} on {{.OperatingSystem}}' \
+  || { echo "docker check failed" >&2; exit 1; }
 
 echo
 echo "Done. Next: ./run.sh <env>   (envs: rengg | regression | preprod | prod)"

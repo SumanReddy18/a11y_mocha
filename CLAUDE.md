@@ -20,9 +20,9 @@ src/
 data/urls.csv             # Input URL list (newline-delimited)
 browserstack.yml          # SDK + a11y scanner config
 Dockerfile                # Bakes a chosen SDK branch into a per-env image
-run.sh                    # Env-aware build + run via Colima/nerdctl
+run.sh                    # Env-aware build + run via Colima/docker
 setup.sh                  # Host-side install (alternative to containerized run)
-setup-colima.sh           # One-time Colima install + start (containerd runtime)
+setup-colima.sh           # One-time Colima + docker CLI install + start (Docker runtime)
 keys.env                  # Secrets, gitignored, must be mode 600
 ```
 
@@ -48,11 +48,11 @@ Switching envs means switching SDK branches. To avoid mutating host `node_module
 ## Containerized run (preferred)
 
 ```
-./setup-colima.sh                  # one-time: install + start Colima (containerd)
+./setup-colima.sh                  # one-time: install Colima + docker CLI, start with Docker runtime
 ./run.sh <env> [--rebuild] [-- <extra mocha args>]
 ```
 
-`run.sh` shells out to `colima nerdctl --` (no Docker daemon required). It mounts `src/`, `data/`, `log/`, and `browserstack.yml` into the container so edits to the URL list or test code don't require a rebuild — only an SDK branch change does.
+`run.sh` uses the standard `docker` CLI (talking to Colima's Docker daemon). It mounts `src/`, `data/`, `log/`, and `browserstack.yml` into the container so edits to the URL list or test code don't require a rebuild — only an SDK branch change does.
 
 ## Secrets (`keys.env`)
 
