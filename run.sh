@@ -5,7 +5,7 @@ set -euo pipefail
 # Each env maps to a different browserstack-node-sdk branch baked into its own image,
 # so switching envs never touches your host node_modules.
 #
-# Uses Colima's bundled nerdctl (containerd runtime) — no docker install required.
+# Uses the Docker runtime inside Colima — the standard `docker` CLI talks to Colima's daemon.
 #
 # Usage:
 #   ./run.sh <env> [--rebuild] [-- <extra args passed to npm test>]
@@ -43,22 +43,18 @@ esac
 
 IMAGE="a11y-mocha:${ENV_NAME}"
 
-# `colima nerdctl -- ...` forwards args straight to nerdctl inside the VM.
-# We wrap it once for readability.
-nerd() { colima nerdctl -- "$@"; }
-
 if ! command -v colima >/dev/null 2>&1; then
   echo "colima not found. Run ./setup-colima.sh first." >&2
   exit 1
 fi
 
 if ! colima status >/dev/null 2>&1; then
-  echo "Colima isn't running. Start it with:  colima start --runtime containerd" >&2
+  echo "Colima isn't running. Start it with:  colima start --runtime docker" >&2
   exit 1
 fi
 
 NEED_BUILD=$REBUILD
-if [ "$NEED_BUILD" -eq 0 ] && ! nerd image inspect "$IMAGE" >/dev/null 2>&1; then
+if [ "$NEED_BUILD" -eq 0 ] && ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
   NEED_BUILD=1
 fi
 
@@ -136,7 +132,7 @@ EOF
   fi
 fi
 
-# Source the file. set -a auto-exports every assignment so they're visible to nerdctl.
+# Source the file. set -a auto-exports every assignment so they're visible to docker.
 set -a
 # shellcheck disable=SC1090
 . "$KEYS_FILE"
@@ -174,7 +170,7 @@ if [ "$NEED_BUILD" -eq 1 ]; then
   trap 'rm -f "$TOKEN_FILE"' EXIT
 
   echo "→ Building $IMAGE  (SDK_REF=$SDK_REF)"
-  nerd build \
+  docker build \
     --build-arg "SDK_REF=${SDK_REF}" \
     --secret "id=gh_token,src=${TOKEN_FILE}" \
     -t "$IMAGE" \
@@ -186,10 +182,12 @@ fi
 mkdir -p log
 
 echo "→ Running $IMAGE  (env=$ENV_NAME, BS user=$BROWSERSTACK_USERNAME)"
-exec colima nerdctl -- run --rm -it \
+exec docker run --rm -it \
   -e "BUILD_NUMBER=${BUILD_NUMBER:-local-$(date +%s)}" \
   -e "BROWSERSTACK_USERNAME=${BROWSERSTACK_USERNAME}" \
   -e "BROWSERSTACK_ACCESS_KEY=${BROWSERSTACK_ACCESS_KEY}" \
+  -e "BROWSERSTACK_TEST_ACCESSIBILITY_SCRIPT_TIMEOUT=60" \
+  -v "$PWD/node_modules/browserstack-node-sdk/src/helpers/accessibility-automation/accessibilityRetryHelper.js:/app/node_modules/browserstack-node-sdk/src/helpers/accessibility-automation/accessibilityRetryHelper.js:ro" \
   -v "$PWD/src:/app/src" \
   -v "$PWD/data:/app/data" \
   -v "$PWD/log:/app/log" \

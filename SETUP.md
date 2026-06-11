@@ -18,7 +18,7 @@ You do **not** need Docker Desktop or Docker Engine.
 
 ## 1. One-time host setup
 
-Install and start Colima (containerd runtime + bundled `nerdctl`):
+Install Colima, the Docker CLI, and start the VM with the Docker runtime:
 
 ```bash
 ./setup-colima.sh
@@ -27,10 +27,12 @@ Install and start Colima (containerd runtime + bundled `nerdctl`):
 This script is idempotent — re-running it is safe. It will:
 
 - `brew install colima` (skipped if already present)
-- start Colima with the `containerd` runtime, 4 CPU / 6 GiB RAM / 30 GiB disk
-- run a `nerdctl info` sanity check
+- `brew install docker` (the CLI — skipped if already present)
+- `brew install docker-buildx` + symlink into `~/.docker/cli-plugins/` (needed for `--secret` in builds)
+- start Colima with the `docker` runtime, 4 CPU / 6 GiB RAM / 30 GiB disk
+- run a `docker info` sanity check
 
-If Colima is already running on a different runtime (e.g. `docker`), the
+If Colima is already running on a different runtime (e.g. `containerd`), the
 script prints the command to switch — it won't stop your VM for you.
 
 ## 2. Create `keys.env`
@@ -140,18 +142,18 @@ Use `--rebuild` when the mapped SDK branch has moved, `package.json` or
 
 ```bash
 # List built images
-colima nerdctl -- images | grep a11y-mocha
+docker images | grep a11y-mocha
 
 # Remove a single env's image (forces a fresh build next time)
-colima nerdctl -- rmi a11y-mocha:preprod
+docker rmi a11y-mocha:preprod
 
 # Remove all env images
-colima nerdctl -- rmi a11y-mocha:rengg a11y-mocha:regression a11y-mocha:preprod a11y-mocha:prod
+docker rmi a11y-mocha:rengg a11y-mocha:regression a11y-mocha:preprod a11y-mocha:prod
 ```
 
 ### Running multiple envs in parallel
 
-Each env has its own image and its own `nerdctl run`, so you can fire them
+Each env has its own image and its own `docker run`, so you can fire them
 in separate terminals concurrently:
 
 ```bash
@@ -196,7 +198,7 @@ or anything else that's bind-mounted.
 
 **`colima not found`** → `./setup-colima.sh` first.
 
-**`Colima isn't running`** → `colima start --runtime containerd`.
+**`Colima isn't running`** → `colima start --runtime docker`.
 
 **`✗ keys.env has permissions 644`** → `chmod 600 keys.env`.
 

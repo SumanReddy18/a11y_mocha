@@ -26,9 +26,9 @@ needs its own BrowserStack `userName` / `accessKey`, which lived hardcoded in
 build time via a Docker build arg. Switching envs becomes a different image
 tag — no host-side reinstall, multiple envs can run concurrently.
 
-**Colima + nerdctl.** Builds and runs go through Colima's bundled `nerdctl`
-on the `containerd` runtime. No Docker Engine, no Docker Desktop, no `docker`
-CLI installed on the host.
+**Colima + Docker.** Builds and runs go through the standard `docker` CLI
+talking to Colima's Docker runtime. No Docker Desktop required — just
+`brew install colima docker`.
 
 **Single `keys.env` file in the repo.** All secrets — GitHub PAT (for fetching
 the private SDK) and per-env BrowserStack credentials — live in one
@@ -53,7 +53,7 @@ invocation time.
        └────────┬─────────────────────────┬──────────────┘
                 │                         │
                 ▼                         ▼
-        nerdctl build              nerdctl run
+        docker build               docker run
         --secret gh_token          -e BROWSERSTACK_USERNAME
         --build-arg SDK_REF        -e BROWSERSTACK_ACCESS_KEY
                 │                         │
@@ -68,7 +68,7 @@ invocation time.
 |--------------------------|---------------------------------------------------------------------------|
 | `Dockerfile`             | `node:20-slim` + git/curl/build tools; takes `SDK_REF` as a build arg.    |
 | `.dockerignore`          | Keeps `node_modules`, `log/`, `keys.env` out of the build context.        |
-| `setup-colima.sh`        | One-time install: `brew install colima`; `colima start --runtime containerd`. |
+| `setup-colima.sh`        | One-time install: `brew install colima docker`; `colima start --runtime docker`. |
 | `run.sh`                 | Resolves env + creds, builds the right image (if missing), runs it.       |
 | `keys.example.env`       | Sanitized template; copy to `keys.env` and fill in real values.           |
 | `keys.env`               | Real secrets. **Gitignored. Never commit.**                               |
@@ -118,7 +118,7 @@ Why each piece:
    optional `${ENV_UPPER}_GITHUB_TOKEN` (falls back to shared `GITHUB_TOKEN`).
 4. If the image `a11y-mocha:<env>` doesn't exist (or `--rebuild`):
    - Writes the resolved token to `~/.cache/a11y-mocha-gh-token` (mode 600).
-   - Runs `nerdctl build --build-arg SDK_REF=… --secret id=gh_token,src=…`.
+   - Runs `docker build --build-arg SDK_REF=… --secret id=gh_token,src=…`.
    - Cleans up the temp token on exit.
 5. Runs the image with:
    - `-e BROWSERSTACK_USERNAME -e BROWSERSTACK_ACCESS_KEY` (only the resolved env's pair).
@@ -127,7 +127,7 @@ Why each piece:
 ## Setup (one time)
 
 ```bash
-# 1. Install Colima (no Docker required)
+# 1. Install Colima + Docker CLI
 ./setup-colima.sh
 
 # 2. Create the keys file from the template
